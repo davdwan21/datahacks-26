@@ -1,29 +1,50 @@
-"""Policy interpretation orchestration (stub: mock output until agents are wired)."""
+"""Policy interpretation orchestration (parser live; downstream agents still stubbed)."""
 
 from __future__ import annotations
 
+from agents.parser import ParsedIntent, parse_policy
 from schema import ParameterDelta, PolicyInterpretation, PolicyRequest, Source
 
 
 def interpret_policy(request: PolicyRequest) -> PolicyInterpretation:
     """
-    Return a valid interpretation with hardcoded values for integration testing.
+    Interpret a policy: parse with Gemini, then return a stub interpretation (Steps 4–6 pending).
 
     Input:
         request — user policy text and optional region.
 
     Output:
-        PolicyInterpretation — always schema-valid in Step 2.
+        PolicyInterpretation — schema-valid; parameter deltas still illustrative.
 
     Failure modes:
-        None for the stub; later steps handle LLM and validation failures.
+        Parser falls back to an ``unclear`` intent on empty input or repeated validation failure;
+        missing ``GEMINI_API_KEY`` raises when parsing is attempted.
     """
-    _ = request  # Stub ignores input; real pipeline will use policy_text.
+    parsed: ParsedIntent = parse_policy(request.policy_text)
+    species_preview = (
+        ", ".join(parsed.affected_species[:5])
+        if parsed.affected_species
+        else "(none named)"
+    )
+    reasoning_trace = [
+        f"Received policy text for region {request.region!r}.",
+        (
+            f"Parser: action_type={parsed.action_type!r}, "
+            f"target_activity={parsed.target_activity!r}, "
+            f"scope_geographic={parsed.scope_geographic!r}."
+        ),
+        (
+            f"Parser: scope_temporal={parsed.scope_temporal!r}, magnitude={parsed.magnitude!r}, "
+            f"affected_species={species_preview}."
+        ),
+        "Research agents not wired — skipping literature, history, and datasets.",
+        "Synthesizer not wired — emitting a single illustrative parameter delta.",
+    ]
     return PolicyInterpretation(
         plain_english_summary=(
-            "Stub response: a hypothetical coastal fishing restriction would "
-            "reduce direct mortality on small pelagic forage fish while "
-            "ecosystem effects propagate through plankton and predators."
+            f"Parsed intent: {parsed.action_type} affecting {parsed.target_activity} "
+            f"({parsed.scope_geographic}). Downstream synthesis is still stubbed; "
+            "anchovy mortality multiplier shown as a placeholder ecological lever."
         ),
         parameter_deltas=[
             ParameterDelta(
@@ -31,8 +52,8 @@ def interpret_policy(request: PolicyRequest) -> PolicyInterpretation:
                 operation="multiply",
                 value=0.6,
                 rationale=(
-                    "Lower fishing-related mortality multiplier under a "
-                    "commercial pressure reduction scenario (illustrative)."
+                    "Illustrative delta pending full pipeline: reduced fishing pressure "
+                    f"often lowers forage-fish mortality under policies like {parsed.action_type!r}."
                 ),
             )
         ],
@@ -47,11 +68,9 @@ def interpret_policy(request: PolicyRequest) -> PolicyInterpretation:
                 ),
             )
         ],
-        reasoning_trace=[
-            "Received policy text and region for interpretation (stub).",
-            "Parser agent not wired — using placeholder structured intent.",
-            "Research agents not wired — skipping literature, history, and datasets.",
-            "Synthesizer not wired — emitting a single validated parameter delta for demo.",
+        reasoning_trace=reasoning_trace,
+        warnings=[
+            "Research, skeptic, and synthesizer agents not yet wired — "
+            "parameter deltas are placeholders only."
         ],
-        warnings=["Stub pipeline: replace with live agents in later steps."],
     )
