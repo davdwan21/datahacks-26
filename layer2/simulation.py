@@ -282,6 +282,24 @@ def apply_cross_species_feedback(env: dict, agents: dict):
     clamp_environment(env)
     return env
 
+def apply_policy_to_environment(policy_text: str, env: dict):
+    """Apply a natural language policy to the environment state."""
+    if not policy_text:
+        return env, None
+
+    print(f"Applying policy: {policy_text}")
+    try:
+        result = database_fetch.parse_policy(policy_text, baseline=env)
+        env.update(result["environment"])
+        print(f"Policy parse confidence: {result['confidence']:.2%}")
+        print(f"Policy summary: {result['summary']}")
+        return env, result
+    except Exception as exc:
+        print(f"  [policy parse error] {exc}")
+        print("  Falling back to manual policy application.")
+        fallback_env = database_fetch.apply_policy_manually(policy_text, baseline=env)
+        env.update(fallback_env)
+        return env, None
 
 def run_simulation(env: dict, agents: dict, ticks: int = 5, verbose: bool = False):
     env = clamp_environment(env.copy())
