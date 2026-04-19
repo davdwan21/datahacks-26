@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SpiralAnimation } from "@/components/ui/spiral-animation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 // ---------------- Types & data ----------------
@@ -37,15 +38,15 @@ interface SimTick {
 
 const SPECIES_META: Record<
   SpeciesKey,
-  { name: string; emoji: string; color: string; size: number }
+  { name: string; color: string; size: number }
 > = {
-  phytoplankton: { name: "Phytoplankton", emoji: "🦠", color: "#00ff9d", size: 4 },
-  zooplankton:   { name: "Zooplankton",   emoji: "🪸", color: "#00cfff", size: 4 },
-  anchovy:       { name: "Anchovy",       emoji: "🐟", color: "#3b82f6", size: 5 },
-  sardine:       { name: "Sardine",       emoji: "🐠", color: "#60a5fa", size: 5 },
-  sea_lion:      { name: "Sea Lion",      emoji: "🦭", color: "#ffb347", size: 6 },
-  kelp:          { name: "Kelp",          emoji: "🌿", color: "#22c55e", size: 5 },
-  urchin:        { name: "Urchin",        emoji: "🦔", color: "#ff4757", size: 5 },
+  phytoplankton: { name: "Phytoplankton", color: "#00ff9d", size: 4 },
+  zooplankton:   { name: "Zooplankton",   color: "#00cfff", size: 4 },
+  anchovy:       { name: "Anchovy",       color: "#3b82f6", size: 5 },
+  sardine:       { name: "Sardine",       color: "#60a5fa", size: 5 },
+  sea_lion:      { name: "Sea Lion",      color: "#ffb347", size: 6 },
+  kelp:          { name: "Kelp",          color: "#22c55e", size: 5 },
+  urchin:        { name: "Urchin",        color: "#ff4757", size: 5 },
 };
 
 const SPECIES_ORDER: SpeciesKey[] = [
@@ -302,7 +303,6 @@ function SpeciesDots({ species, count, total, onClick }: {
               cursor: "pointer",
               pointerEvents: visible ? "auto" : "none",
               transition: "opacity 800ms ease, r 800ms ease",
-              filter: `drop-shadow(0 0 4px ${meta.color})`,
             }}
           />
         );
@@ -417,7 +417,6 @@ function HealthBar({ value, trend, compareValue }: { value: number; trend: Trend
           style={{
             width: `${value}%`,
             background: color,
-            boxShadow: `0 0 8px ${color}66`,
             transition: "width 800ms ease, background 400ms ease",
           }}
         />
@@ -463,7 +462,6 @@ function SpeciesLegend({ compact = false }: { compact?: boolean }) {
                 width: compact ? 8 : 10,
                 height: compact ? 8 : 10,
                 background: meta.color,
-                boxShadow: `0 0 6px ${meta.color}`,
               }}
             />
             <span className="text-[#e8f4f8] font-medium uppercase tracking-wide">{meta.name}</span>
@@ -477,163 +475,73 @@ function SpeciesLegend({ compact = false }: { compact?: boolean }) {
 // ---------------- Landing screen ----------------
 function Landing({ onSimulate }: { onSimulate: (policy: string) => void }) {
   const [policy, setPolicy] = useState("");
+  const [visible, setVisible] = useState(false);
   const examples = ["Ban trawling", "Create marine protected area", "Reduce pollution"];
 
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
-    <div className="min-h-screen w-full flex flex-col animate-fade-in-slow" style={{ background: "#050d1a", color: "#e8f4f8" }}>
-      {/* Header */}
-      <div className="px-10 pt-8 pb-4 flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1
-            className="text-7xl md:text-8xl tracking-tight shimmer-text"
-            style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}
-          >
-            TIDAL WAVE
-          </h1>
-          <p className="mt-2 text-lg md:text-xl" style={{ fontFamily: "var(--font-narrative)", fontStyle: "italic", color: "#00cfff" }}>
-            See the future of the California Current.
-          </p>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] tracking-[0.3em] text-[#6b8fa8] mb-1" style={{ fontFamily: "var(--font-mono)" }}>POWERED BY</div>
-          <div className="flex gap-2 justify-end">
-            <span className="px-2 py-1 rounded-md text-[10px] font-bold border border-[#0f2040] bg-[#0a1628] text-[#00ff9d]" style={{ fontFamily: "var(--font-mono)" }}>iNATURALIST</span>
-            <span className="px-2 py-1 rounded-md text-[10px] font-bold border border-[#0f2040] bg-[#0a1628] text-[#00cfff]" style={{ fontFamily: "var(--font-mono)" }}>CalCOFI</span>
-          </div>
-        </div>
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-black">
+      {/* Spiral background */}
+      <div className="absolute inset-0">
+        <SpiralAnimation />
       </div>
 
-      {/* Main: map + side panel */}
-      <div className="px-10 grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ minHeight: "62vh" }}>
-        {/* Map (2/3 width on desktop, taller) */}
-        <div className="lg:col-span-2 relative rounded-xl overflow-hidden border border-[#0f2040]" style={{ minHeight: "62vh" }}>
-          <CoastMap
-            tick={SAMPLE_TICK}
-            onSpeciesClick={() => {}}
-            showBarrenFlash={false}
-          />
+      {/* Centered content */}
+      <div
+        className="absolute inset-0 flex flex-col items-center justify-center z-10 transition-all duration-1000 ease-out"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(12px)" }}
+      >
+        <h1
+          className="text-5xl md:text-7xl tracking-widest text-white font-extralight mb-3 uppercase"
+          style={{ fontFamily: "var(--font-display)", letterSpacing: "0.18em" }}
+        >
+          Tidal Wave
+        </h1>
+        <p
+          className="text-xs tracking-[0.35em] text-white/40 uppercase mb-12"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
+          California Current Ecosystem Simulator
+        </p>
 
-          {/* Policy input overlay at bottom of map */}
-          <div className="absolute left-0 right-0 bottom-0 p-6 bg-gradient-to-t from-[#050d1a] via-[#050d1a]/85 to-transparent">
-            <div className="flex gap-3">
-              <input
-                value={policy}
-                onChange={(e) => setPolicy(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && policy.trim()) onSimulate(policy.trim()); }}
-                placeholder="Type a policy to simulate..."
-                className="flex-1 px-4 py-3 rounded-md bg-[#0a1628] border border-[#0f2040] text-[#e8f4f8] placeholder:text-[#6b8fa8] outline-none focus:border-[#00cfff]"
-                style={{ fontFamily: "var(--font-mono)" }}
-              />
+        {/* Policy input */}
+        <div className="w-full max-w-md px-6 flex flex-col gap-3">
+          <div className="flex gap-2">
+            <input
+              value={policy}
+              onChange={(e) => setPolicy(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && policy.trim()) onSimulate(policy.trim()); }}
+              placeholder="Enter a policy to simulate..."
+              className="flex-1 px-4 py-2.5 rounded-sm bg-white/10 border border-white/25 text-white placeholder:text-white/40 outline-none focus:border-white/50 text-sm transition-colors"
+              style={{ fontFamily: "var(--font-mono)" }}
+            />
+            <button
+              onClick={() => policy.trim() && onSimulate(policy.trim())}
+              className="px-5 py-2.5 rounded-sm text-black text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-opacity"
+              style={{ background: "white", fontFamily: "var(--font-mono)" }}
+            >
+              Run
+            </button>
+          </div>
+
+          {/* Example chips */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {examples.map((e) => (
               <button
-                onClick={() => policy.trim() && onSimulate(policy.trim())}
-                className="px-6 py-3 rounded-md font-bold tracking-widest text-sm hover:brightness-110 hover:scale-105 transition-all"
-                style={{
-                  background: "linear-gradient(135deg, #00ff9d, #00cfff)",
-                  color: "#050d1a",
-                  fontFamily: "var(--font-mono)",
-                  boxShadow: "0 0 20px rgba(0, 255, 157, 0.4)",
-                }}
+                key={e}
+                onClick={() => setPolicy(e)}
+                className="px-3.5 py-1.5 rounded-sm border border-white/20 text-white/50 text-[11px] tracking-widest uppercase hover:border-white/40 hover:text-white/75 transition-all"
+                style={{ fontFamily: "var(--font-mono)" }}
               >
-                SIMULATE
+                {e}
               </button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {examples.map((e) => (
-                <button
-                  key={e}
-                  onClick={() => setPolicy(e)}
-                  className="px-3 py-1.5 rounded-full border border-[#0f2040] bg-[#0a1628] text-[#6b8fa8] text-xs hover:border-[#00cfff] hover:text-[#00cfff] transition"
-                  style={{ fontFamily: "var(--font-mono)" }}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
-
-        {/* Side panel — fills the right space */}
-        <div className="flex flex-col gap-4">
-          {/* Legend */}
-          <div className="rounded-xl bg-[#0a1628] border border-[#0f2040] p-4">
-            <div className="text-[10px] tracking-[0.25em] font-bold text-[#6b8fa8] mb-3" style={{ fontFamily: "var(--font-mono)" }}>
-              ECOSYSTEM LEGEND
-            </div>
-            <SpeciesLegend />
-          </div>
-
-          {/* Datasets */}
-          <div className="rounded-xl bg-[#0a1628] border border-[#0f2040] p-4 flex-1">
-            <div className="text-[10px] tracking-[0.25em] font-bold text-[#6b8fa8] mb-3" style={{ fontFamily: "var(--font-mono)" }}>
-              LIVE DATASETS
-            </div>
-            <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-[#050d1a] border border-[#0f2040] hover:border-[#00ff9d] transition">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🦠</span>
-                  <span className="text-sm font-bold text-[#00ff9d]" style={{ fontFamily: "var(--font-mono)" }}>iNaturalist</span>
-                </div>
-                <p className="text-xs text-[#e8f4f8] leading-snug" style={{ fontFamily: "var(--font-narrative)" }}>
-                  Crowdsourced species observations seed our agents with real-world sightings along the California coast.
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-[#050d1a] border border-[#0f2040] hover:border-[#00cfff] transition">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🌊</span>
-                  <span className="text-sm font-bold text-[#00cfff]" style={{ fontFamily: "var(--font-mono)" }}>CalCOFI</span>
-                </div>
-                <p className="text-xs text-[#e8f4f8] leading-snug" style={{ fontFamily: "var(--font-narrative)" }}>
-                  70+ years of California Cooperative Oceanic Fisheries Investigations data calibrate temperature, salinity, and nutrients.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Eye-catching stat strip */}
-      <div className="mx-10 mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-xl bg-gradient-to-br from-[#0a1628] to-[#050d1a] border border-[#0f2040] p-5 hover:border-[#00ff9d] transition group">
-          <div
-            className="text-6xl md:text-7xl font-bold leading-none animate-glow-pulse"
-            style={{ fontFamily: "var(--font-display)", color: "#00ff9d" }}
-          >
-            7
-          </div>
-          <div className="text-sm font-bold text-[#e8f4f8] mt-2 tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)" }}>SPECIES MODELED</div>
-          <p className="text-sm text-[#6b8fa8] mt-2 leading-relaxed" style={{ fontFamily: "var(--font-narrative)", fontStyle: "italic" }}>
-            From phytoplankton to sea lions — every trophic level of the California Current.
-          </p>
-        </div>
-        <div className="rounded-xl bg-gradient-to-br from-[#0a1628] to-[#050d1a] border border-[#0f2040] p-5 hover:border-[#00cfff] transition group">
-          <div
-            className="text-6xl md:text-7xl font-bold leading-none animate-glow-pulse"
-            style={{ fontFamily: "var(--font-display)", color: "#00cfff", animationDelay: "0.6s" }}
-          >
-            6
-          </div>
-          <div className="text-sm font-bold text-[#e8f4f8] mt-2 tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)" }}>ENV PARAMETERS</div>
-          <p className="text-sm text-[#6b8fa8] mt-2 leading-relaxed" style={{ fontFamily: "var(--font-narrative)", fontStyle: "italic" }}>
-            Temperature, nutrients, pH, salinity, fishing pressure & pollution drive the model.
-          </p>
-        </div>
-        <div className="rounded-xl bg-gradient-to-br from-[#0a1628] to-[#050d1a] border border-[#0f2040] p-5 hover:border-[#ffb347] transition group">
-          <div
-            className="text-6xl md:text-7xl font-bold leading-none animate-glow-pulse"
-            style={{ fontFamily: "var(--font-display)", color: "#ffb347", animationDelay: "1.2s" }}
-          >
-            5y
-          </div>
-          <div className="text-sm font-bold text-[#e8f4f8] mt-2 tracking-[0.2em]" style={{ fontFamily: "var(--font-mono)" }}>FORECAST HORIZON</div>
-          <p className="text-sm text-[#6b8fa8] mt-2 leading-relaxed" style={{ fontFamily: "var(--font-narrative)", fontStyle: "italic" }}>
-            See how a single policy ripples through the ecosystem year by year.
-          </p>
-        </div>
-      </div>
-
-      <div className="px-10 py-6 text-xs text-[#6b8fa8] flex justify-between flex-wrap gap-2" style={{ fontFamily: "var(--font-mono)" }}>
-        <span>California Current Ecosystem // Live agent simulation</span>
-        <span>DATA: iNaturalist Species Data · CalCOFI Data Portal</span>
       </div>
     </div>
   );
@@ -655,91 +563,31 @@ function LoadingScreen({ years }: { years: number }) {
   }, [phases.length]);
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden flex items-center justify-center" style={{ background: "#050d1a", color: "#e8f4f8" }}>
-      {/* Floating bubbles */}
-      {Array.from({ length: 18 }).map((_, i) => {
-        const left = (i * 53) % 100;
-        const size = 6 + (i % 5) * 4;
-        const delay = (i * 0.3) % 6;
-        const duration = 6 + (i % 4) * 2;
-        const color = i % 3 === 0 ? "#00ff9d" : i % 3 === 1 ? "#00cfff" : "#ffb347";
-        return (
-          <div
-            key={i}
-            className="absolute rounded-full pointer-events-none"
-            style={{
-              left: `${left}%`,
-              bottom: `-${size}px`,
-              width: size,
-              height: size,
-              background: color,
-              opacity: 0.4,
-              boxShadow: `0 0 12px ${color}`,
-              animation: `float-up ${duration}s ease-in ${delay}s infinite`,
-            }}
-          />
-        );
-      })}
-
-      {/* Concentric ripples */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        {[0, 0.6, 1.2, 1.8].map((d) => (
-          <div
-            key={d}
-            className="absolute rounded-full border-2"
-            style={{
-              width: 200,
-              height: 200,
-              borderColor: "#00cfff",
-              animation: `ripple 2.4s ease-out ${d}s infinite`,
-            }}
-          />
-        ))}
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-black">
+      {/* Spiral background */}
+      <div className="absolute inset-0">
+        <SpiralAnimation />
       </div>
 
-      <div className="text-center z-10 px-6 animate-fade-in-slow">
-        <div className="relative w-24 h-24 mx-auto mb-6">
-          <div
-            className="absolute inset-0 rounded-full border-2 border-transparent"
-            style={{
-              borderTopColor: "#00ff9d",
-              borderRightColor: "#00cfff",
-              animation: "orbit-spin 1.4s linear infinite",
-              boxShadow: "0 0 30px rgba(0, 255, 157, 0.4)",
-            }}
-          />
-          <div
-            className="absolute inset-3 rounded-full border-2 border-transparent"
-            style={{
-              borderBottomColor: "#ffb347",
-              borderLeftColor: "#00cfff",
-              animation: "orbit-spin 2s linear infinite reverse",
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center text-3xl animate-pulse-soft">🌊</div>
-        </div>
-
+      {/* Centered text */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center z-10 text-center px-6">
         <div
-          className="text-3xl md:text-5xl mb-3 font-bold shimmer-text"
+          className="text-3xl md:text-5xl mb-3 font-bold text-white"
           style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}
         >
           SIMULATING {years} YEARS
         </div>
-        <div className="text-xs md:text-sm text-[#6b8fa8] uppercase tracking-[0.3em] mb-4" style={{ fontFamily: "var(--font-mono)" }}>
+        <div className="text-xs md:text-sm text-white/40 uppercase tracking-[0.3em] mb-4" style={{ fontFamily: "var(--font-mono)" }}>
           California Current
         </div>
         <div
           key={phaseIdx}
-          className="text-base md:text-lg text-[#00cfff] animate-fade-in"
+          className="text-base md:text-lg text-white/60 animate-fade-in"
           style={{ fontFamily: "var(--font-narrative)", fontStyle: "italic", minHeight: "1.5em" }}
         >
           {phases[phaseIdx]}
         </div>
       </div>
-
-      <div className="ocean-wave" />
-      <div className="ocean-wave" />
-      <div className="ocean-wave" />
     </div>
   );
 }
@@ -766,7 +614,7 @@ function ParamDiff({ before, after, onDismiss }: { before: EnvState; after: EnvS
     <div className="rounded-lg bg-[#0a1628]/95 backdrop-blur border border-[#0f2040] shadow-2xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#0f2040] bg-gradient-to-r from-[#0a1628] to-[#0f2040]">
         <div className="text-[10px] tracking-[0.2em] font-bold text-[#00cfff]" style={{ fontFamily: "var(--font-mono)" }}>
-          ⚡ POLICY APPLIED
+          POLICY APPLIED
         </div>
         {onDismiss && (
           <button
@@ -862,19 +710,19 @@ function Simulation({
   const barren = isUrchinBarren(tick);
   const collapse = isAnchovyCollapse(tick);
 
-  // History data for chart
-  const historyData = timeline.slice(0, yearIdx + 1).map((t) => {
-    const row: Record<string, number | string> = { year: `Y${t.ticks}` };
-    SPECIES_ORDER.forEach((s) => { row[s] = t.agents[s].population; });
+  // History data for chart — full X axis always visible, values null beyond current year
+  const historyData = timeline.map((t, i) => {
+    const row: Record<string, number | string | null> = { year: `Y${t.ticks}` };
+    SPECIES_ORDER.forEach((s) => { row[s] = i <= yearIdx ? t.agents[s].population : null; });
     return row;
   });
 
   // Environment parameter history (normalized 0-100 for shared axis)
-  const envHistoryData = timeline.slice(0, yearIdx + 1).map((t) => ({
+  const envHistoryData = timeline.map((t, i) => ({
     year: `Y${t.ticks}`,
-    fishing: Math.round(t.environment.fishing_pressure * 100),
-    pollution: Math.round(t.environment.pollution_index * 100),
-    nutrients: Math.round(t.environment.nutrients * 100),
+    fishing: i <= yearIdx ? Math.round(t.environment.fishing_pressure * 100) : null,
+    pollution: i <= yearIdx ? Math.round(t.environment.pollution_index * 100) : null,
+    nutrients: i <= yearIdx ? Math.round(t.environment.nutrients * 100) : null,
   }));
 
   return (
@@ -933,7 +781,7 @@ function Simulation({
               className="absolute bottom-4 left-4 z-10 text-[10px] px-3 py-1.5 rounded bg-[#0a1628]/90 backdrop-blur border border-[#0f2040] text-[#6b8fa8] hover:text-[#00cfff] hover:border-[#00cfff] transition"
               style={{ fontFamily: "var(--font-mono)" }}
             >
-              ⚡ SHOW POLICY DIFF
+              SHOW POLICY DIFF
             </button>
           )}
         </div>
@@ -957,7 +805,7 @@ function Simulation({
                 style={{ background: "rgba(255,71,87,0.12)", borderColor: "#ff4757" }}
               >
                 <div className="text-[10px] tracking-widest font-bold mb-1" style={{ color: "#ff4757", fontFamily: "var(--font-mono)" }}>
-                  ⚠ THRESHOLD EVENT
+                  THRESHOLD EVENT
                 </div>
                 <div className="text-xs text-[#e8f4f8]" style={{ fontFamily: "var(--font-mono)" }}>
                   {barren && "URCHIN BARREN: kelp forest collapse imminent. "}
@@ -989,10 +837,9 @@ function Simulation({
                   className={`rounded-md p-3 text-left border transition-all ${isSelected ? "border-[#00cfff] bg-[#0f2040]" : "border-[#0f2040] bg-[#0a1628] hover:border-[#1a3050]"}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl leading-none">{meta.emoji}</span>
                     <span
                       className="inline-block rounded-full"
-                      style={{ width: 8, height: 8, background: meta.color, boxShadow: `0 0 6px ${meta.color}` }}
+                      style={{ width: 8, height: 8, background: meta.color }}
                     />
                   </div>
                   <div className="text-xs font-bold tracking-wide text-[#e8f4f8] mt-2 uppercase" style={{ fontFamily: "var(--font-mono)" }}>
@@ -1020,7 +867,7 @@ function Simulation({
             <div className="rounded-lg bg-[#0a1628] border border-[#0f2040] p-4 animate-fade-in">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-[10px] tracking-widest font-bold text-[#6b8fa8]" style={{ fontFamily: "var(--font-mono)" }}>
-                  {SPECIES_META[selected].emoji} {SPECIES_META[selected].name.toUpperCase()} // POPULATION HISTORY
+                  {SPECIES_META[selected].name.toUpperCase()} // POPULATION HISTORY
                 </div>
                 <button onClick={() => setSelected(null)} className="text-[10px] text-[#6b8fa8] hover:text-[#00cfff]">✕</button>
               </div>
@@ -1040,7 +887,8 @@ function Simulation({
                       stroke={SPECIES_META[selected].color}
                       strokeWidth={2}
                       dot={{ fill: SPECIES_META[selected].color, r: 3 }}
-                      animationDuration={800}
+                      connectNulls={false}
+                      isAnimationActive={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -1085,9 +933,9 @@ function Simulation({
                     contentStyle={{ background: "#0a1628", border: "1px solid #0f2040", fontFamily: "IBM Plex Mono", fontSize: 11 }}
                     labelStyle={{ color: "#e8f4f8" }}
                   />
-                  <Line type="monotone" dataKey="fishing" stroke="#ff4757" strokeWidth={2} dot={{ r: 2 }} animationDuration={800} />
-                  <Line type="monotone" dataKey="pollution" stroke="#ffb347" strokeWidth={2} dot={{ r: 2 }} animationDuration={800} />
-                  <Line type="monotone" dataKey="nutrients" stroke="#00ff9d" strokeWidth={2} dot={{ r: 2 }} animationDuration={800} />
+                  <Line type="monotone" dataKey="fishing" stroke="#ff4757" strokeWidth={2} dot={{ r: 2 }} connectNulls={false} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="pollution" stroke="#ffb347" strokeWidth={2} dot={{ r: 2 }} connectNulls={false} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="nutrients" stroke="#00ff9d" strokeWidth={2} dot={{ r: 2 }} connectNulls={false} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -1095,48 +943,46 @@ function Simulation({
 
           {/* 4. Year navigation */}
           <div className="rounded-lg bg-[#0a1628] border border-[#0f2040] p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 mb-3">
               <button
                 onClick={() => setYearIdx((i) => Math.max(0, i - 1))}
                 disabled={yearIdx === 0}
-                className="px-3 py-1.5 rounded border border-[#0f2040] text-xs hover:border-[#00cfff] disabled:opacity-30"
+                className="px-3 py-1.5 rounded border border-[#0f2040] text-xs hover:border-[#00cfff] disabled:opacity-30 shrink-0"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
-                ◀ PREV
+                ◀
               </button>
-              <div className="flex items-center gap-2">
-                {timeline.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setYearIdx(i)}
-                    className="w-2.5 h-2.5 rounded-full transition-all"
-                    style={{
-                      background: i === yearIdx ? "#00ff9d" : i < yearIdx ? "#00cfff" : "#0f2040",
-                      animation: i === yearIdx ? "pulse-soft 1.6s ease-in-out infinite" : undefined,
-                      boxShadow: i === yearIdx ? "0 0 8px #00ff9d" : undefined,
-                    }}
-                    aria-label={`Year ${i}`}
-                  />
-                ))}
-              </div>
+              <input
+                type="range"
+                min={0}
+                max={timeline.length - 1}
+                step={1}
+                value={yearIdx}
+                onChange={(e) => { setYearIdx(Number(e.target.value)); setAutoplay(false); }}
+                className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #00cfff ${(yearIdx / (timeline.length - 1)) * 100}%, #0f2040 ${(yearIdx / (timeline.length - 1)) * 100}%)`,
+                  accentColor: "#00ff9d",
+                }}
+              />
               <button
                 onClick={() => setYearIdx((i) => Math.min(timeline.length - 1, i + 1))}
                 disabled={yearIdx === timeline.length - 1}
-                className="px-3 py-1.5 rounded border border-[#0f2040] text-xs hover:border-[#00cfff] disabled:opacity-30"
+                className="px-3 py-1.5 rounded border border-[#0f2040] text-xs hover:border-[#00cfff] disabled:opacity-30 shrink-0"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
-                NEXT ▶
+                ▶
               </button>
               <button
                 onClick={() => setAutoplay((a) => !a)}
-                className="px-3 py-1.5 rounded text-xs font-bold"
+                className="px-3 py-1.5 rounded text-xs font-bold shrink-0"
                 style={{
                   background: autoplay ? "#ff4757" : "linear-gradient(135deg, #00ff9d, #00cfff)",
                   color: "#050d1a",
                   fontFamily: "var(--font-mono)",
                 }}
               >
-                {autoplay ? "■ STOP" : "▶ AUTOPLAY"}
+                {autoplay ? "■ STOP" : "▶ PLAY"}
               </button>
             </div>
             <div className="text-center mt-2 text-[10px] text-[#6b8fa8] tracking-widest" style={{ fontFamily: "var(--font-mono)" }}>
