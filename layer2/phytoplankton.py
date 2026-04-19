@@ -3,7 +3,7 @@ import os
 import re
 import time
 
-# Ollama setup - assuming llama3.1 is running locally
+# Groq setup - using llama-3.3-70b-versatile via API
 
 # Agent state
 agent = {

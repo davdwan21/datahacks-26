@@ -1,6 +1,9 @@
-import ollama
+from groq import Groq
+import os
 import re
 import time
+
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # ── Sardine agent state ──────────────────────────────────────────────────────
 sardine = {
@@ -47,6 +50,39 @@ BEHAVIORS = {
     "migrate_south":      -8,   # sardines go south unlike anchovy which goes north
     "decline":           -15,
 }
+
+
+def validate_behavior(raw, allowed, default):
+    if not isinstance(raw, str):
+        print(f"[validation warning] non-string response, using default '{default}'")
+        return default
+
+    behavior = default
+    lines = [line.strip() for line in raw.splitlines() if line.strip()]
+    for line in lines:
+        if line.upper().startswith("BEHAVIOR:"):
+            candidate = line.split(":", 1)[1].strip().lower().replace(" ", "_")
+            if candidate in allowed:
+                return candidate
+
+    for b in allowed:
+        if re.search(rf"\b{re.escape(b)}\b", raw.lower()):
+            behavior = b
+            break
+
+    if raw.lower().count("behavior:") != 1:
+        print(f"[validation warning] unexpected behavior format, using '{behavior}'. Raw: {raw!r}")
+
+    return behavior
+
+
+def extract_reason(raw):
+    match = re.search(r'REASON:\s*(.+)', raw, flags=re.IGNORECASE)
+    if match:
+        reason = match.group(1).strip()
+        if len(reason) >= 10:
+            return reason
+    return "No reason provided."
 
 
 def build_prompt(agent, env, zoo, anchovy):
@@ -123,25 +159,18 @@ def tick(agent, env, zoo, anchovy):
     prompt = build_prompt(agent, env, zoo, anchovy)
 
     try:
-        response = ollama.chat(
-            model="llama3.1",
-            messages=[{"role": "user", "content": prompt}]
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100
         )
-        raw = response["message"]["content"]
+        raw = response.choices[0].message.content
     except Exception as e:
-        print(f"Ollama error: {e}")
+        print(f"Groq error: {e}")
         raw = "BEHAVIOR: school\nREASON: Defaulting due to error."
 
-    # Parse behavior
-    behavior = "school"
-    for b in BEHAVIORS:
-        if b in raw.lower():
-            behavior = b
-            break
-
-    # Parse reason
-    reason_match = re.search(r'REASON:\s*(.+)', raw)
-    reason = reason_match.group(1).strip() if reason_match else "No reason provided."
+    behavior = validate_behavior(raw, BEHAVIORS, "school")
+    reason = extract_reason(raw)
 
     # Apply delta and clamp
     delta = BEHAVIORS[behavior]

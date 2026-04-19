@@ -1,11 +1,12 @@
 """
-Task 1: Policy Parser (Ollama version) - Refactored
+Task 1: Policy Parser (Groq version) - Refactored
 Converts natural language environmental policies into absolute environmental parameters.
-Uses local Ollama models - no API keys required!
+Uses Groq API with llama-3.3-70b-versatile model.
 """
 
 import json
-import requests
+from groq import Groq
+import os
 from typing import Dict, List, TypedDict
 
 
@@ -31,21 +32,34 @@ BASELINE_ENVIRONMENT = {
     "pollution_index": 0.3    # 0-1 normalized
 }
 
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+
+def validate_environment(environment: Dict[str, float]) -> Dict[str, float]:
+    validated = {}
+    validated["temperature"] = max(10.0, min(22.0, float(environment.get("temperature", BASELINE_ENVIRONMENT["temperature"]))))
+    validated["nutrients"] = max(0.0, min(1.0, float(environment.get("nutrients", BASELINE_ENVIRONMENT["nutrients"]))))
+    validated["pH"] = max(7.8, min(8.4, float(environment.get("pH", BASELINE_ENVIRONMENT["pH"]))))
+    validated["salinity"] = max(30.0, min(36.0, float(environment.get("salinity", BASELINE_ENVIRONMENT["salinity"]))))
+    validated["fishing_pressure"] = max(0.0, min(1.0, float(environment.get("fishing_pressure", BASELINE_ENVIRONMENT["fishing_pressure"]))))
+    validated["pollution_index"] = max(0.0, min(1.0, float(environment.get("pollution_index", BASELINE_ENVIRONMENT["pollution_index"]))))
+    return validated
+
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
 
 def parse_policy(
     policy_text: str,
     baseline: Dict[str, float] = None,
-    model: str = "llama3.1",
-    ollama_url: str = "http://localhost:11434"
+    model: str = "llama-3.3-70b-versatile"
 ) -> PolicyParseResult:
     """
-    Converts natural language policy into absolute environmental parameters using Ollama.
+    Converts natural language policy into absolute environmental parameters using Groq.
    
     Args:
         policy_text: Natural language description of an environmental policy
         baseline: Baseline environment dict (uses BASELINE_ENVIRONMENT if None)
-        model: Ollama model to use (default: "llama3.1")
-        ollama_url: Ollama server URL (default: "http://localhost:11434")
+        model: Groq model to use (default: "llama-3.3-70b-versatile")
    
     Returns:
         Dictionary containing:
@@ -134,23 +148,14 @@ Return ONLY valid JSON, no markdown, no explanation:
     # Construct the full prompt
     full_prompt = f"{system_prompt}\n\nPolicy to parse:\n{policy_text}\n\nJSON output:"
    
-    # Call Ollama API
+    # Call Groq API
     try:
-        response = requests.post(
-            f"{ollama_url}/api/generate",
-            json={
-                "model": model,
-                "prompt": full_prompt,
-                "stream": False,
-                "format": "json"  # Force JSON output
-            },
-            timeout=60  # 60 second timeout for generation
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": full_prompt}],
+            max_tokens=1000  # Allow more tokens for JSON response
         )
-        response.raise_for_status()
-       
-        # Extract the generated text
-        result_data = response.json()
-        raw_response = result_data.get("response", "")
+        raw_response = response.choices[0].message.content
        
         # Strip markdown code fences if present
         clean = raw_response.replace("```json", "").replace("```", "").strip()
@@ -167,16 +172,16 @@ Return ONLY valid JSON, no markdown, no explanation:
             if param not in result["environment"]:
                 result["environment"][param] = value
        
+        # Prevent hallucinated environment values from escaping
+        result["environment"] = validate_environment(result["environment"])
+       
         return result
        
-    except requests.exceptions.ConnectionError:
+    except Exception as e:
         raise ConnectionError(
-            "Could not connect to Ollama. Make sure it's running:\n"
-            "  1. Run 'ollama serve' in a terminal\n"
-            "  2. Pull a model: 'ollama pull llama3.1'"
+            "Could not connect to Groq API. Make sure GROQ_API_KEY is set:\n"
+            f"  Error: {e}"
         )
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Model did not return valid JSON. Raw response: {raw_response[:200]}")
 
 
 def apply_policy_manually(
@@ -185,7 +190,7 @@ def apply_policy_manually(
 ) -> Dict[str, float]:
     """
     Fallback function: applies simple policy rules without LLM.
-    Useful for testing or when Ollama is unavailable.
+    Useful for testing or when Groq API is unavailable.
    
     Args:
         policy_text: Policy description
@@ -231,13 +236,13 @@ if __name__ == "__main__":
     ]
    
     print("=" * 60)
-    print("TASK 1: POLICY PARSER TEST (Ollama - Refactored)")
+    print("TASK 1: POLICY PARSER TEST (Groq - Refactored)")
     print("=" * 60)
     print("\nBaseline Environment:")
     for param, value in BASELINE_ENVIRONMENT.items():
         print(f"  {param}: {value}")
-    print("\nMake sure Ollama is running: ollama serve")
-    print("Using model: llama3.1")
+    print("\nMake sure GROQ_API_KEY environment variable is set.")
+    print("Using model: llama-3.3-70b-versatile")
     print("=" * 60)
    
     for i, policy in enumerate(test_policies, 1):
