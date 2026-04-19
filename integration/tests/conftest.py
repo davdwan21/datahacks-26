@@ -1,4 +1,4 @@
-"""Ensure repository root is on ``sys.path`` for ``Layer1.*`` imports."""
+"""Path setup and ``Layer1/.env`` load before Layer 2 imports (Groq)."""
 
 from __future__ import annotations
 
@@ -11,3 +11,10 @@ _layer1 = _root / "Layer1"
 for p in (_layer1, _root):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(_layer1 / ".env")
+except ImportError:
+    pass
