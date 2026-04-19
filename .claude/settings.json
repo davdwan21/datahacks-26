@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wait)",
+      "Bash(/tmp/tfbin/terraform apply *)",
+      "Bash(aws ecr *)",
+      "Bash(docker login *)",
+      "Bash(docker build *)",
+      "Bash(docker tag *)",
+      "Bash(docker push *)"
+    ]
+  }
+}

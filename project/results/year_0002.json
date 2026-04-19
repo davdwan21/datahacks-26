@@ -1,0 +1,50 @@
+{
+  "timestamp_utc": "2026-04-19T04:38:51.780763+00:00",
+  "year": 2,
+  "policy": "",
+  "environment": {
+    "temperature": 16.2,
+    "nutrients": 0.6,
+    "pH": 8.05,
+    "salinity": 33.4,
+    "fishing_pressure": 0.2,
+    "pollution_index": 0.3
+  },
+  "agents": {
+    "phytoplankton": {
+      "population": 80,
+      "last_action": "persist",
+      "health_trend": "stable"
+    },
+    "zooplankton": {
+      "population": 61,
+      "last_action": "swarm",
+      "health_trend": "improving"
+    },
+    "anchovy": {
+      "population": 60,
+      "last_action": "school",
+      "health_trend": "improving"
+    },
+    "sardine": {
+      "population": 75,
+      "last_action": "feed_aggressively",
+      "health_trend": "improving"
+    },
+    "sea_lion": {
+      "population": 80,
+      "last_action": "thrive",
+      "health_trend": "improving"
+    },
+    "kelp": {
+      "population": 48,
+      "last_action": "recede",
+      "health_trend": "declining"
+    },
+    "urchin": {
+      "population": 64,
+      "last_action": "graze_kelp",
+      "health_trend": "improving"
+    }
+  }
+}
