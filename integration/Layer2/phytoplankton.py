@@ -1,9 +1,9 @@
-import requests
+from groq import Groq
 import os
 import re
 import time
 
-# Groq setup - using llama-3.3-70b-versatile via API
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # Agent state
 agent = {
@@ -62,16 +62,14 @@ def tick(agent, environment):
     prompt = build_prompt(agent, environment)
 
     try:
-        response = requests.post("http://localhost:11434/api/generate", json={
-            "model": "llama3.1",
-            "prompt": prompt,
-            "options": {"num_predict": 100},
-            "stream": False
-        })
-        response.raise_for_status()
-        raw = response.json()["response"]
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+        )
+        raw = (response.choices[0].message.content or "").strip()
     except Exception as e:
-        print(f"API error: {e}")
+        print(f"Groq error: {e}")
         raw = "BEHAVIOR: persist\nREASON: Defaulting due to API error."
 
     # Parse behavior
