@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIDAL WAVE - California Current Ecosystem Simulation</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * {
             margin: 0;
@@ -42,6 +44,32 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-shadow: 0 0 40px rgba(77, 208, 225, 0.3);
+        }
+        
+        .map-container {
+            background: rgba(10, 24, 40, 0.6);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(77, 208, 225, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        
+        .map-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #80deea;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        #regionMap {
+            height: 400px;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 2px solid rgba(77, 208, 225, 0.3);
         }
         
         .controls {
@@ -346,6 +374,32 @@
             margin-left: 0.25rem;
         }
         
+        /* Leaflet customizations */
+        .leaflet-container {
+            background: #1a3a52;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            background: rgba(10, 24, 40, 0.95);
+            color: #e8f4f8;
+            border: 1px solid rgba(77, 208, 225, 0.3);
+            border-radius: 0.5rem;
+        }
+        
+        .leaflet-popup-tip {
+            background: rgba(10, 24, 40, 0.95);
+        }
+        
+        .leaflet-popup-content {
+            font-family: 'Crimson Pro', serif;
+            margin: 1rem;
+        }
+        
+        .leaflet-popup-content h3 {
+            color: #4dd0e1;
+            margin-bottom: 0.5rem;
+        }
+        
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
@@ -361,6 +415,10 @@
             
             .controls {
                 flex-direction: column;
+            }
+            
+            #regionMap {
+                height: 300px;
             }
         }
         
@@ -408,6 +466,11 @@
             <div class="year-dots" id="yearDots"></div>
         </div>
         
+        <div class="map-container">
+            <div class="map-title">California Current Ecosystem Region</div>
+            <div id="regionMap"></div>
+        </div>
+        
         <div id="mapContainer"></div>
     </div>
     
@@ -427,13 +490,13 @@
         "health_trend": "improving"
       },
       "anchovy": {
-        "population": 55,
-        "last_action": "school",
+        "population": 65,
+        "last_action": "feed_aggressively",
         "health_trend": "improving"
       },
       "sardine": {
-        "population": 63,
-        "last_action": "dominate",
+        "population": 60,
+        "last_action": "feed_aggressively",
         "health_trend": "improving"
       },
       "sea_lion": {
@@ -457,33 +520,33 @@
       "nutrients": 0.6,
       "pH": 8.05,
       "salinity": 33.4,
-      "fishing_pressure": 0.0,
+      "fishing_pressure": 0,
       "pollution_index": 0.3
     },
     "behaviors": {
       "phytoplankton": {
         "action": "bloom",
-        "reason": "I'll stick with what we have and avoid taking the risk of blooming when conditions aren't ideal."
+        "reason": "No reason provided."
       },
       "zooplankton": {
         "action": "swarm",
-        "reason": "I'm going to swarm because the temperature is too high and it's stressful for us, even with abundant food available."
+        "reason": "I need to disperse my colony to escape the stressful high temperature and find a more favorable environment for our growth."
       },
       "anchovy": {
-        "action": "school",
-        "reason": "No reason provided."
+        "action": "feed_aggressively",
+        "reason": "Food is moderate and temperature is elevated but still within safe levels, so I'll take advantage of the decent zooplankton trend to feed aggressively."
       },
       "sardine": {
-        "action": "dominate",
+        "action": "feed_aggressively",
         "reason": "No reason provided."
       },
       "sea_lion": {
         "action": "hunt",
-        "reason": "** I'm going to go hunting because the anchovy and sardine populations are moderate, the temperature is optimal for hunting, and conditions are easy, making it a good time to catch some fish."
+        "reason": "No reason provided."
       },
       "kelp": {
         "action": "grow",
-        "reason": "No reason provided."
+        "reason": "** I will hold my current density and structure because the urchin threat is moderate, but the temperature is optimal for growth, allowing me to maintain stability."
       },
       "urchin": {
         "action": "graze_kelp",
@@ -506,12 +569,12 @@
       },
       "anchovy": {
         "population": 70,
-        "last_action": "feed_aggressively",
+        "last_action": "school",
         "health_trend": "improving"
       },
       "sardine": {
-        "population": 68,
-        "last_action": "school",
+        "population": 75,
+        "last_action": "feed_aggressively",
         "health_trend": "improving"
       },
       "sea_lion": {
@@ -535,7 +598,7 @@
       "nutrients": 0.6,
       "pH": 8.05,
       "salinity": 33.4,
-      "fishing_pressure": 0.0,
+      "fishing_pressure": 0,
       "pollution_index": 0.3
     },
     "behaviors": {
@@ -545,15 +608,15 @@
       },
       "zooplankton": {
         "action": "swarm",
-        "reason": "No reason provided."
+        "reason": "I need to get out of this overheated water as quickly as possible."
       },
       "anchovy": {
-        "action": "feed_aggressively",
+        "action": "school",
         "reason": "No reason provided."
       },
       "sardine": {
-        "action": "school",
-        "reason": "No reason provided."
+        "action": "feed_aggressively",
+        "reason": "I can take advantage of the improving zooplankton trend and the optimal temperature to aggressively feed before anchovy recovers from their weakness."
       },
       "sea_lion": {
         "action": "hunt",
@@ -565,7 +628,7 @@
       },
       "urchin": {
         "action": "barren_expand",
-        "reason": "** I'm in boom conditions with abundant kelp and low fishing pressure, so it's time to expand aggressively and take advantage of the plentiful food."
+        "reason": "I'm in a prime environment with abundant kelp and minimal fishing pressure, so it's time to expand aggressively and create more \"urchin barrens\"!"
       }
     }
   },
@@ -583,23 +646,23 @@
         "health_trend": "improving"
       },
       "anchovy": {
-        "population": 75,
-        "last_action": "school",
-        "health_trend": "improving"
-      },
-      "sardine": {
-        "population": 83,
+        "population": 85,
         "last_action": "feed_aggressively",
         "health_trend": "improving"
       },
+      "sardine": {
+        "population": 87,
+        "last_action": "spawn",
+        "health_trend": "improving"
+      },
       "sea_lion": {
-        "population": 92,
-        "last_action": "thrive",
+        "population": 86,
+        "last_action": "hunt",
         "health_trend": "improving"
       },
       "kelp": {
-        "population": 51,
-        "last_action": "recede",
+        "population": 38,
+        "last_action": "collapse",
         "health_trend": "declining"
       },
       "urchin": {
@@ -613,37 +676,37 @@
       "nutrients": 0.6,
       "pH": 8.05,
       "salinity": 33.4,
-      "fishing_pressure": 0.0,
+      "fishing_pressure": 0,
       "pollution_index": 0.3
     },
     "behaviors": {
       "phytoplankton": {
         "action": "bloom",
-        "reason": "No reason provided."
+        "reason": "** I need to be cautious and conserve energy since the temperature is slightly elevated and our nutrient levels are moderate, so I'll choose to persist in my current state rather than risk another bloom or migration."
       },
       "zooplankton": {
         "action": "swarm",
-        "reason": "** I need to get out of this heat, and since the food is still abundant, swarming will help me spread out and escape the high temperature stress."
+        "reason": "I need to escape this extreme temperature, and swarming might help us find a cooler patch of water."
       },
       "anchovy": {
-        "action": "school",
-        "reason": "** I'm feeling a bit crowded and food is moderate, so it's safer to stick together with my school for now."
+        "action": "feed_aggressively",
+        "reason": "I'll take advantage of the improving zooplankton trend and moderate food availability to aggressively hunt for food."
       },
       "sardine": {
-        "action": "feed_aggressively",
+        "action": "spawn",
         "reason": "No reason provided."
       },
       "sea_lion": {
-        "action": "thrive",
+        "action": "hunt",
         "reason": "No reason provided."
       },
       "kelp": {
-        "action": "recede",
-        "reason": "I need to withdraw my fronds and escape the urchins' grazing pressure to protect myself."
+        "action": "collapse",
+        "reason": "I must collapse to prevent the formation of urchin barrens and give myself a chance to recover when urchin pressure subsides."
       },
       "urchin": {
         "action": "graze_kelp",
-        "reason": "I'm not starving and there's enough kelp to go around, so it's time for a leisurely graze."
+        "reason": "No reason provided."
       }
     }
   },
@@ -661,24 +724,24 @@
         "health_trend": "improving"
       },
       "anchovy": {
-        "population": 90,
+        "population": 100,
         "last_action": "feed_aggressively",
         "health_trend": "improving"
       },
       "sardine": {
-        "population": 98,
-        "last_action": "feed_aggressively",
+        "population": 92,
+        "last_action": "school",
         "health_trend": "improving"
       },
       "sea_lion": {
         "population": 100,
-        "last_action": "hunt",
+        "last_action": "thrive",
         "health_trend": "improving"
       },
       "kelp": {
-        "population": 51,
-        "last_action": "hold",
-        "health_trend": "stable"
+        "population": 13,
+        "last_action": "collapse",
+        "health_trend": "declining"
       },
       "urchin": {
         "population": 96,
@@ -691,37 +754,37 @@
       "nutrients": 0.6,
       "pH": 8.05,
       "salinity": 33.4,
-      "fishing_pressure": 0.0,
+      "fishing_pressure": 0,
       "pollution_index": 0.3
     },
     "behaviors": {
       "phytoplankton": {
         "action": "bloom",
-        "reason": "I'll stick with my current moderate nutrient levels and avoid the stress of blooming in these slightly elevated temperatures."
+        "reason": "I'll stick to my moderate nutrient conditions and avoid blooming because my population is already at 100% and I don't want to overextend myself."
       },
       "zooplankton": {
         "action": "swarm",
-        "reason": "I need to swarm because the temperature is too high and it's stressful for us, even with abundant food."
+        "reason": "No reason provided."
       },
       "anchovy": {
         "action": "feed_aggressively",
-        "reason": "No reason provided."
+        "reason": "** I should continue to feed aggressively because the food is abundant and the temperature is only mildly stressful."
       },
       "sardine": {
-        "action": "feed_aggressively",
-        "reason": "No reason provided."
+        "action": "school",
+        "reason": "With abundant food and optimal temperatures, I'll take advantage of the current conditions to aggressively feed."
       },
       "sea_lion": {
-        "action": "hunt",
-        "reason": "No reason provided."
+        "action": "thrive",
+        "reason": "** \"The anchovy are at 100/100 and the sardine are still abundant, so it's a perfect time to take full advantage of this food bonanza and fuel up our colony!\""
       },
       "kelp": {
-        "action": "hold",
+        "action": "collapse",
         "reason": "No reason provided."
       },
       "urchin": {
         "action": "graze_kelp",
-        "reason": "** I'll continue to graze on the moderate kelp supply since it's enough for me to survive and our population is healthy."
+        "reason": "No reason provided."
       }
     }
   },
@@ -745,23 +808,23 @@
       },
       "sardine": {
         "population": 100,
-        "last_action": "school",
+        "last_action": "feed_aggressively",
         "health_trend": "improving"
       },
       "sea_lion": {
         "population": 100,
-        "last_action": "hunt",
+        "last_action": "thrive",
         "health_trend": "improving"
       },
       "kelp": {
-        "population": 26,
+        "population": 0,
         "last_action": "collapse",
         "health_trend": "declining"
       },
       "urchin": {
-        "population": 100,
-        "last_action": "graze_kelp",
-        "health_trend": "improving"
+        "population": 78,
+        "last_action": "starve",
+        "health_trend": "declining"
       }
     },
     "environment": {
@@ -769,7 +832,7 @@
       "nutrients": 0.6,
       "pH": 8.05,
       "salinity": 33.4,
-      "fishing_pressure": 0.0,
+      "fishing_pressure": 0,
       "pollution_index": 0.3
     },
     "behaviors": {
@@ -779,32 +842,114 @@
       },
       "zooplankton": {
         "action": "swarm",
-        "reason": "The temperature is too high and stressful for us, even with abundant food, so we need to find a way to escape the heat by swarming."
+        "reason": "No reason provided."
       },
       "anchovy": {
         "action": "feed_aggressively",
         "reason": "No reason provided."
       },
       "sardine": {
-        "action": "school",
-        "reason": "It's warm and there's plenty of food, so it's time to increase our population and ensure the survival of our school."
+        "action": "feed_aggressively",
+        "reason": "No reason provided."
       },
       "sea_lion": {
-        "action": "hunt",
-        "reason": "With anchovy and sardine populations at 100/100, it's the perfect opportunity to maximize my energy intake in these easy hunting conditions."
+        "action": "thrive",
+        "reason": "\"I'm feeling great and the anchovy and sardine are plentiful, so I'll just keep enjoying this abundance and thrive!\""
       },
       "kelp": {
         "action": "collapse",
-        "reason": "I must collapse immediately to prevent the formation of urchin barrens, which would be catastrophic for my ecosystem and all the species that depend on me."
+        "reason": "No reason provided."
       },
       "urchin": {
-        "action": "graze_kelp",
+        "action": "starve",
         "reason": "No reason provided."
       }
     }
   }
 ];
         let currentYearIndex = 0;
+        
+        // Initialize the California Current map
+        function initRegionMap() {
+            const map = L.map('regionMap').setView([35.5, -121.5], 6);
+            
+            // Use ocean-themed tiles
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri',
+                maxZoom: 13,
+                minZoom: 5
+            }).addTo(map);
+            
+            // Define the California Current region polygon
+            const californiaCurrentZone = [
+                [41.0, -125.0],  // Northern California
+                [41.0, -121.0],
+                [32.5, -117.0],  // Southern California/Baja
+                [32.5, -122.0],
+                [41.0, -125.0]
+            ];
+            
+            // Add the California Current zone
+            L.polygon(californiaCurrentZone, {
+                color: '#4dd0e1',
+                fillColor: '#4dd0e1',
+                fillOpacity: 0.15,
+                weight: 2,
+                dashArray: '5, 10'
+            }).addTo(map).bindPopup('<h3>California Current System</h3><p>Cold-water upwelling zone supporting rich marine biodiversity</p>');
+            
+            // Add key location markers
+            const locations = [
+                {
+                    name: 'Monterey Bay',
+                    coords: [36.8, -121.9],
+                    description: 'Major upwelling center and kelp forest habitat'
+                },
+                {
+                    name: 'Channel Islands',
+                    coords: [34.0, -119.8],
+                    description: 'Critical breeding grounds for sea lions and seabirds'
+                },
+                {
+                    name: 'Point Conception',
+                    coords: [34.45, -120.47],
+                    description: 'Biogeographic boundary - warm and cold currents meet'
+                },
+                {
+                    name: 'San Diego',
+                    coords: [32.7, -117.2],
+                    description: 'Southern extent of simulation region'
+                }
+            ];
+            
+            locations.forEach(loc => {
+                L.circleMarker(loc.coords, {
+                    radius: 6,
+                    fillColor: '#80deea',
+                    color: '#4dd0e1',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map).bindPopup(`<h3>${loc.name}</h3><p>${loc.description}</p>`);
+            });
+            
+            // Add current flow arrows (simplified)
+            const currentArrows = [
+                [[40.0, -124.5], [38.0, -123.5]],
+                [[38.0, -123.5], [36.0, -122.0]],
+                [[36.0, -122.0], [34.0, -120.5]],
+                [[34.0, -120.5], [33.0, -118.5]]
+            ];
+            
+            currentArrows.forEach(arrow => {
+                L.polyline(arrow, {
+                    color: '#26c6da',
+                    weight: 3,
+                    opacity: 0.6,
+                    dashArray: '10, 5'
+                }).addTo(map).bindPopup('<h3>California Current Flow</h3><p>Southward cold-water flow along the coast</p>');
+            });
+        }
         
         function renderYear(index) {
             const data = simulationData[index];
@@ -993,7 +1138,8 @@
             if (e.key === 'ArrowRight') changeYear(1);
         });
         
-        // Initial render
+        // Initialize everything
+        initRegionMap();
         renderYear(0);
     </script>
 </body>
